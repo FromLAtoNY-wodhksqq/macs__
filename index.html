@@ -372,69 +372,80 @@ main { min-width: 0; overflow: auto; padding: 0 clamp(20px, 3.2vw, 52px) 48px; }
   .project-view { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .project-ring { max-width: 150px; }
 }
-.summary-carousel {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: center;
-  padding: 10px 0;
+.summary {
   margin-bottom: 22px;
-  border-block: 1px solid var(--line);
-}
-.summary-track {
-  display: flex;
-  min-width: 0;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  overscroll-behavior-x: contain;
-}
-.summary-track::-webkit-scrollbar { display: none; }
-.summary-slide {
-  flex: 0 0 100%;
-  min-width: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-content: center;
-  align-items: center;
-  gap: 2px 16px;
-  padding: 3px 8px;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-}
-.summary-slide small {
-  grid-column: 1 / -1;
-  color: var(--dim);
-  font-size: 13px;
-  font-weight: 600;
-}
-.summary-slide strong {
-  font-size: clamp(17px, 1.55vw, 22px);
-  font-weight: 690;
-  letter-spacing: -.025em;
-}
-.summary-slide p { color: var(--dim); font-size: 13px; overflow-wrap: anywhere; }
-.summary-slide em { color: var(--ot); font-style: normal; margin-left: 4px; }
-.summary-controls { display: flex; align-items: center; gap: 6px; }
-.summary-controls output { min-width: 32px; text-align: center; color: var(--dim); font-size: 13px; }
-.summary-controls button {
-  display: grid;
-  place-items: center;
-  min-width: 36px;
-  min-height: 36px;
-  background: var(--panel);
+  background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: var(--radius);
+}
+
+.summary-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.summary-tab {
+  position: relative;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 3px;
+  min-width: 0;
+  padding: 12px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--soft);
+  background: transparent;
+  font: inherit;
+  text-align: left;
   cursor: pointer;
 }
-.summary-controls button:hover:not([aria-disabled="true"]) { background: var(--hov); }
-.summary-controls button[aria-disabled="true"] { opacity: .42; cursor: default; }
-.summary-controls button:first-child .ic { transform: rotate(180deg); }
-@media (max-width: 640px) {
-  .summary-carousel { gap: 6px; margin-bottom: 14px; }
-  .summary-slide { grid-template-columns: minmax(0, 1fr); padding-inline: 3px; }
-  .summary-controls { gap: 3px; }
-  .summary-controls button { min-width: 40px; min-height: 44px; }
+.summary-tab + .summary-tab { border-left: 1px solid var(--soft); }
+.summary-tab:first-child { border-radius: var(--radius) 0 0 0; }
+.summary-tab:last-child { border-radius: 0 var(--radius) 0 0; }
+.summary-tab:focus-visible { outline-offset: -3px; z-index: 1; }
+.summary-tab:hover { background: var(--tint); }
+.summary-tab[aria-selected="true"] { background: #F2F7FE; }
+.summary-tab::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -1px;
+  height: 2px;
+  background: var(--o);
+  transform: scaleX(0);
+  transition: transform 150ms var(--ease);
+  pointer-events: none;
+}
+.summary-tab[aria-selected="true"]::after { transform: scaleX(1); }
+.summary-tab span { color: var(--dim); font-size: 13px; font-weight: 600; }
+.summary-tab strong { font-size: clamp(17px, 1.45vw, 21px); line-height: 1.28; font-weight: 690; }
+.summary-tab strong em { color: var(--ot); font-size: 13px; font-style: normal; white-space: nowrap; }
+
+.summary-detail { min-width: 0; padding: 10px 16px; }
+.summary-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  min-height: 21px;
+  font-size: 14px;
+  animation: summary-enter 170ms var(--ease);
+}
+.summary-panel strong { font-weight: 670; }
+.summary-panel span, .summary-panel p { color: var(--dim); }
+@keyframes summary-enter {
+  from { opacity: 0; transform: translateX(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 600px) {
+  .summary { margin-bottom: 14px; }
+  .summary-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .summary-tab { padding: 9px 11px; }
+  .summary-tab:nth-child(3) { border-left: 0; }
+  .summary-tab:nth-child(2) { border-radius: 0 var(--radius) 0 0; }
+  .summary-tab:last-child { border-radius: 0; }
+  .summary-detail { min-height: 63px; padding: 8px 11px; }
+  .summary-panel { gap: 1px 6px; }
 }
 </style>
 
@@ -462,17 +473,18 @@ main { min-width: 0; overflow: auto; padding: 0 clamp(20px, 3.2vw, 52px) 48px; }
       </div>
     </header>
 
-    <section class="summary-carousel" aria-label="주요 현황" aria-roledescription="슬라이드 모음">
-      <div class="summary-track" id="summary-track" tabindex="0" aria-label="주요 현황, 좌우 화살표로 넘기기">
-        <article class="summary-slide" role="group" aria-roledescription="슬라이드" aria-label="1 / 4"><small>다음 미팅</small><strong>주간 랩 미팅</strong><p><time datetime="2026-11-17T10:00">11.17(화) 10:00</time> · 세미나실 2</p></article>
-        <article class="summary-slide" role="group" aria-roledescription="슬라이드" aria-label="2 / 4"><small>가장 가까운 마감 <em>D-3</em></small><strong>ACM 초록 제출</strong><p><time datetime="2026-11-19T17:00">11.19(목) 17:00</time></p></article>
-        <article class="summary-slide" role="group" aria-roledescription="슬라이드" aria-label="3 / 4"><small>제출 대기</small><strong>7건</strong><p>학생 제출을 기다리는 항목</p></article>
-        <article class="summary-slide" role="group" aria-roledescription="슬라이드" aria-label="4 / 4"><small>응답 수집 중</small><strong>2건</strong><p>진행 중인 취합·요청</p></article>
+    <section class="summary" aria-label="주요 현황">
+      <div class="summary-tabs" id="summary-tabs" role="tablist" aria-label="주요 현황 항목">
+        <button class="summary-tab" type="button" role="tab" id="summary-tab-1" aria-controls="summary-panel-1" aria-selected="true" tabindex="0"><span>다음 미팅</span><strong>내일 10:00</strong></button>
+        <button class="summary-tab" type="button" role="tab" id="summary-tab-2" aria-controls="summary-panel-2" aria-selected="false" tabindex="-1"><span>가까운 마감</span><strong>11.19 <em>D-3</em></strong></button>
+        <button class="summary-tab" type="button" role="tab" id="summary-tab-3" aria-controls="summary-panel-3" aria-selected="false" tabindex="-1"><span>제출 대기</span><strong>7건</strong></button>
+        <button class="summary-tab" type="button" role="tab" id="summary-tab-4" aria-controls="summary-panel-4" aria-selected="false" tabindex="-1"><span>응답 수집 중</span><strong>2건</strong></button>
       </div>
-      <div class="summary-controls">
-        <button type="button" id="summary-prev" aria-label="이전 현황" aria-controls="summary-track" aria-disabled="true"><svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg></button>
-        <output id="summary-position" aria-label="슬라이드 위치">1 / 4</output>
-        <button type="button" id="summary-next" aria-label="다음 현황" aria-controls="summary-track" aria-disabled="false"><svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg></button>
+      <div class="summary-detail">
+        <div class="summary-panel" id="summary-panel-1" role="tabpanel" aria-labelledby="summary-tab-1" tabindex="0"><strong>주간 랩 미팅</strong><span><time datetime="2026-11-17T10:00">11.17(화) 10:00</time> · 세미나실 2</span></div>
+        <div class="summary-panel" id="summary-panel-2" role="tabpanel" aria-labelledby="summary-tab-2" tabindex="0" hidden><strong>ACM 초록 제출</strong><span><time datetime="2026-11-19T17:00">11.19(목) 17:00</time></span></div>
+        <div class="summary-panel" id="summary-panel-3" role="tabpanel" aria-labelledby="summary-tab-3" tabindex="0" hidden><p>학생 제출을 기다리는 항목</p></div>
+        <div class="summary-panel" id="summary-panel-4" role="tabpanel" aria-labelledby="summary-tab-4" tabindex="0" hidden><p>진행 중인 취합·요청</p></div>
       </div>
     </section>
 
@@ -547,49 +559,34 @@ main { min-width: 0; overflow: auto; padding: 0 clamp(20px, 3.2vw, 52px) 48px; }
 <div class=scrim id=scrim></div>
 <dialog class=big id=big aria-label="캘린더"><div class=bg><div class=bl id=bl></div><div class=br id=br></div></div></dialog>
 <script>
-const summaryTrack = document.getElementById('summary-track');
-const summaryPrev = document.getElementById('summary-prev');
-const summaryNext = document.getElementById('summary-next');
-const summaryPosition = document.getElementById('summary-position');
-const summaryCount = summaryTrack.children.length;
-let summaryIndex = 0;
-let summaryWidth = summaryTrack.clientWidth;
+const summaryTabList = document.getElementById('summary-tabs');
+const summaryTabs = Array.from(summaryTabList.querySelectorAll('[role="tab"]'));
+const summaryPanels = summaryTabs.map(tab => document.getElementById(tab.getAttribute('aria-controls')));
 
-function syncSummaryIndex() {
-  if (summaryTrack.clientWidth !== summaryWidth) return;
-  const index = Math.round(summaryTrack.scrollLeft / summaryWidth);
-  if (index === summaryIndex) return;
-
-  summaryIndex = index;
-  summaryPrev.setAttribute('aria-disabled', String(index === 0));
-  summaryNext.setAttribute('aria-disabled', String(index === summaryCount - 1));
-  summaryPosition.value = (index + 1) + ' / ' + summaryCount;
-}
-
-function showSummary(index) {
-  const destination = Math.max(0, Math.min(index, summaryCount - 1));
-  if (destination === summaryIndex) return;
-  summaryTrack.scrollTo({
-    left: destination * summaryTrack.clientWidth,
-    behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'
+function selectSummaryTab(index) {
+  summaryTabs.forEach((tab, tabIndex) => {
+    const active = tabIndex === index;
+    tab.setAttribute('aria-selected', String(active));
+    tab.tabIndex = active ? 0 : -1;
+    summaryPanels[tabIndex].hidden = !active;
   });
 }
 
-new ResizeObserver(() => {
-  const width = summaryTrack.clientWidth;
-  if (width === summaryWidth) return;
-  summaryWidth = width;
-  summaryTrack.scrollTo({ left: summaryIndex * width, behavior: 'instant' });
-}).observe(summaryTrack);
-
-summaryTrack.addEventListener('scroll', syncSummaryIndex, { passive: true });
-summaryPrev.addEventListener('click', () => showSummary(summaryIndex - 1));
-summaryNext.addEventListener('click', () => showSummary(summaryIndex + 1));
-summaryTrack.closest('.summary-carousel').addEventListener('keydown', event => {
-  if (event.altKey || event.ctrlKey || event.metaKey) return;
-  if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-  event.preventDefault();
-  showSummary(summaryIndex + (event.key === 'ArrowRight' ? 1 : -1));
+summaryTabs.forEach((tab, index) => {
+  tab.addEventListener('click', () => selectSummaryTab(index));
+  tab.addEventListener('keydown', event => {
+    let next = index;
+    switch (event.key) {
+      case 'ArrowLeft': next = (index + summaryTabs.length - 1) % summaryTabs.length; break;
+      case 'ArrowRight': next = (index + 1) % summaryTabs.length; break;
+      case 'Home': next = 0; break;
+      case 'End': next = summaryTabs.length - 1; break;
+      default: return;
+    }
+    event.preventDefault();
+    selectSummaryTab(next);
+    summaryTabs[next].focus();
+  });
 });
 
 const NAV=[["연구실 홈"],["내가 할 일"],["연구·업무","프로젝트","업무","취합·요청","논문·투고","연구 기록"],["미팅·일정","미팅","캘린더","간트차트"],["소통","공지사항","개인 대화","질문·피드백","회의"],["연구실 운영","자료실","학생별 현황","인건비 관리","구성원·승인"]];
