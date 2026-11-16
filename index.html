@@ -345,10 +345,16 @@ main { min-width: 0; overflow: auto; padding: 0 clamp(20px, 3.2vw, 52px) 48px; }
 .ring-copy strong { font-size: clamp(23px, 2.5vw, 34px); font-weight: 730; line-height: 1.2; letter-spacing: -.035em; }
 .ring-segment { cursor: pointer; }
 .ring-segment path { fill: none; stroke-width: 15; stroke-linecap: butt; }
+.ring-segment .hit-area { stroke: transparent; stroke-width: 19; pointer-events: stroke; }
+.ring-segment .ring-visual {
+  pointer-events: none;
+  transition: transform 200ms var(--ease);
+}
 .ring-segment .track { stroke: #E7ECF3; }
 .ring-segment .progress { stroke: #548DC6; }
-.ring-segment.is-selected .track, .ring-segment:hover .track { stroke: #D9E9FC; }
-.ring-segment.is-selected .progress, .ring-segment:hover .progress { stroke: var(--o); }
+.ring-segment.is-active .track { stroke: #D9E9FC; }
+.ring-segment.is-active .progress { stroke: var(--o); }
+.ring-segment.is-preview .ring-visual { transform: translate(var(--shift-x), var(--shift-y)); }
 #project-options { min-width: 0; }
 .project-option {
   display: grid;
@@ -364,7 +370,7 @@ main { min-width: 0; overflow: auto; padding: 0 clamp(20px, 3.2vw, 52px) 48px; }
   cursor: pointer;
 }
 .project-option:last-child { border-bottom-color: transparent; }
-.project-option:hover { background: var(--tint); }
+.project-option.is-preview { background: #EAF3FD; }
 .project-option[aria-pressed="true"] { background: #EAF3FD; box-shadow: inset 2px 0 var(--o); }
 .project-option:focus-visible { outline-offset: -2px; }
 .project-option strong, .project-option .percent { font-size: 14px; font-weight: 690; }
@@ -503,6 +509,7 @@ const ringDetail = document.getElementById('ring-detail');
 const delayedProjects = P.filter(project => project.p < project.pl).length;
 const sector = 360 / P.length;
 let selectedProject = null;
+let previewProject = null;
 
 function arc(start, end) {
   function point(degrees) {
@@ -516,9 +523,15 @@ projectRing.innerHTML = P.map((project, index) => {
   const start = index * sector + 2;
   const end = start + sector - 4;
   const progressEnd = start + (end - start) * project.p / 100;
-  return `<g class="ring-segment" data-project="${index}">
-    <path class="track" d="${arc(start, end)}"></path>
-    <path class="progress" d="${arc(start, progressEnd)}"></path>
+  const middle = ((start + end) / 2 - 90) * Math.PI / 180;
+  const track = arc(start, end);
+  return `<g class="ring-segment" data-project="${index}"
+    style="--shift-x:${(7 * Math.cos(middle)).toFixed(2)}px; --shift-y:${(7 * Math.sin(middle)).toFixed(2)}px">
+    <path class="hit-area" d="${track}"></path>
+    <g class="ring-visual">
+      <path class="track" d="${track}"></path>
+      <path class="progress" d="${arc(start, progressEnd)}"></path>
+    </g>
   </g>`;
 }).join('');
 
@@ -530,27 +543,44 @@ projectOptions.innerHTML = P.map((project, index) => {
   </button>`;
 }).join('');
 
-function selectProject(index) {
-  selectedProject = selectedProject === index ? null : index;
-  const project = P[selectedProject];
+function renderProjectSummary() {
+  const activeProject = previewProject ?? selectedProject;
+  const project = P[activeProject];
   ringLabel.textContent = project ? project.n : '진행 중인 프로젝트';
   ringValue.textContent = project ? project.p + '%' : P.length + '건';
   ringDetail.textContent = project ? '계획 ' + project.pl + '%' : '지연 ' + delayedProjects + '건';
   for (const segment of projectRing.children) {
-    segment.classList.toggle('is-selected', Number(segment.dataset.project) === selectedProject);
+    const index = Number(segment.dataset.project);
+    segment.classList.toggle('is-active', index === activeProject);
+    segment.classList.toggle('is-preview', index === previewProject);
   }
   for (const option of projectOptions.children) {
-    option.setAttribute('aria-pressed', String(Number(option.dataset.project) === selectedProject));
+    const index = Number(option.dataset.project);
+    option.classList.toggle('is-preview', index === previewProject);
+    option.setAttribute('aria-pressed', String(index === selectedProject));
   }
 }
 
 for (const group of [projectRing, projectOptions]) {
-  group.addEventListener('click', event => {
-    const item = event.target.closest('[data-project]');
-    if (item) selectProject(Number(item.dataset.project));
-  });
+  for (const item of group.children) {
+    const index = Number(item.dataset.project);
+    item.addEventListener('pointerenter', event => {
+      if (event.pointerType !== 'mouse') return;
+      previewProject = index;
+      renderProjectSummary();
+    });
+    item.addEventListener('pointerleave', event => {
+      if (event.pointerType !== 'mouse' || previewProject !== index) return;
+      previewProject = null;
+      renderProjectSummary();
+    });
+    item.addEventListener('click', () => {
+      selectedProject = selectedProject === index ? null : index;
+      renderProjectSummary();
+    });
+  }
 }
-selectProject(null);
+renderProjectSummary();
 
 const todo = document.querySelector('.todo');
 const taskCount = document.getElementById('left');
