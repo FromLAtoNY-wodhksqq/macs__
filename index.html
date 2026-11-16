@@ -479,7 +479,7 @@ main { min-width: 0; overflow: auto; padding: 0 clamp(20px, 3.2vw, 52px) 48px; }
         </section>
 
         <section class="card" aria-labelledby="schedule-title">
-          <div class="cl"><h2 class="ch" id="schedule-title">다가오는 일정</h2></div>
+          <div class="cl"><h2 class="ch" id="schedule-title" tabindex="-1">다가오는 일정</h2></div>
           <div class="list">
             <a class="ev row-link" href="#"><time datetime="2026-11-17">11.17</time><b>주간 랩 미팅</b><em>10:00</em></a>
             <a class="ev row-link" href="#"><time datetime="2026-11-19">11.19</time><b>ACM 초록 제출 마감</b><em class="d">D-3 · 17:00</em></a>
@@ -496,7 +496,7 @@ main { min-width: 0; overflow: auto; padding: 0 clamp(20px, 3.2vw, 52px) 48px; }
 <div class=scrim id=scrim></div>
 <dialog class=big id=big aria-label="캘린더"><div class=bg><div class=bl id=bl></div><div class=br id=br></div></div></dialog>
 <script>
-const NAV=[["연구실 홈"],["내가 할 일"],["연구·업무","프로젝트","업무","취합·요청","논문·투고","연구 기록"],["미팅·일정","미팅","캘린더","간트차트"],["소통","공지사항","개인 대화","질문·피드백"],["연구실 운영","자료실","학생별 현황","인건비 관리","구성원·승인"]];
+const NAV=[["연구실 홈"],["내가 할 일"],["연구·업무","프로젝트","업무","취합·요청","논문·투고","연구 기록"],["미팅·일정","미팅","캘린더","간트차트"],["소통","공지사항","개인 대화","질문·피드백","회의"],["연구실 운영","자료실","학생별 현황","인건비 관리","구성원·승인"]];
 const nav=document.getElementById('nav');let n=0;
 NAV.forEach((g,k)=>{if(g.length==1){nav.insertAdjacentHTML('beforeend',`<a href="#"${k==0?' class=on aria-current=page':''}><b>${String(n++).padStart(2,'0')}</b>${g[0]}</a>`)}else{nav.insertAdjacentHTML('beforeend',`<div class=gh>${g[0]}</div>`);g.slice(1).forEach(s=>nav.insertAdjacentHTML('beforeend',`<a href="#" class=s>${s}</a>`))}});
 document.addEventListener('click',e=>{if(e.target.closest('a[href="#"]'))e.preventDefault()});
@@ -641,6 +641,16 @@ function closeBig(){if(VT){big.style.viewTransitionName='cal';big.classList.add(
 big.classList.add('closing');setTimeout(()=>{big.close();big.classList.remove('closing')},140)}
 mini.onclick=openBig;
 const calendarNav = Array.from(nav.querySelectorAll('a')).find(link => link.textContent === '캘린더');
+const meetingNav = Array.from(nav.querySelectorAll('a')).find(link => link.textContent === '회의');
+meetingNav.href = '#schedule-title';
+meetingNav.addEventListener('click', event => {
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  event.preventDefault();
+  setNav(false);
+  const schedule = document.getElementById('schedule-title');
+  schedule.focus({ preventScroll: true });
+  schedule.scrollIntoView({ block: 'start' });
+});
 calendarNav.addEventListener('click', () => {
   setNav(false);
   openBig();
